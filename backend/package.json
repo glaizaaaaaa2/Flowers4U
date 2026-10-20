@@ -1,0 +1,30 @@
+{
+  "name": "flowers-4u-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js",
+    "seed": "node seeder/seedFlowers.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jose": "^6.2.12",
+    "jsonwebtoken": "^9.0.3",
+    "leo-profanity": "^1.9.0",
+    "mongoose": "^9.9.1",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.4",
+    "nodemon": "^3.1.14",
+    "pdfkit": "^0.20.2",
+    "validator": "^13.15.35"
+  }
+}
