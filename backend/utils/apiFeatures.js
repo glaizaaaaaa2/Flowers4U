@@ -14,7 +14,7 @@ class APIFeatures {
         return this;
     }
 
-    // ?price[gte]=1&price[lte]=100&category=Roses&ratings[gte]=4
+    // ?price[gte]=1&price[lte]=100&category=Roses&ratings[gte]=4&numOfReviews[gte]=5
     filter() {
         const q = this.queryStr;
         const filters = {};
@@ -26,6 +26,9 @@ class APIFeatures {
         }
         if (q['ratings[gte]']) {
             filters.ratings = { $gte: Number(q['ratings[gte]']) };
+        }
+        if (q['numOfReviews[gte]']) {
+            filters.numOfReviews = { $gte: Number(q['numOfReviews[gte]']) };
         }
         if (q.category) {
             filters.category = q.category;

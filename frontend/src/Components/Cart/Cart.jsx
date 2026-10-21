@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import { useDispatch, useSelector } from 'react-redux'
@@ -6,81 +5,119 @@ import { addItemToCart, removeItemFromCart } from '../../actions/cartActions'
 import { formatPeso } from '../Utils/helpers'
 
 const Cart = () => {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch()
     const navigate = useNavigate()
-    const { cartItems } = useSelector(state => state.cart)
+    const { cartItems = [] } = useSelector(state => state.cart)
+    const totalItems = cartItems.reduce((total, item) => total + Number(item.quantity), 0)
+    const subtotal = cartItems.reduce((total, item) => total + item.quantity * item.price, 0)
 
     const increaseQty = (item) => {
-        if (item.quantity + 1 > item.stock) return;
-        dispatch(addItemToCart(item.product, item.quantity + 1, item.size))
+        if (item.quantity < item.stock) {
+            dispatch(addItemToCart(item.product, item.quantity + 1, item.size))
+        }
     }
 
     const decreaseQty = (item) => {
-        if (item.quantity - 1 <= 0) return;
-        dispatch(addItemToCart(item.product, item.quantity - 1, item.size))
+        if (item.quantity > 1) {
+            dispatch(addItemToCart(item.product, item.quantity - 1, item.size))
+        }
     }
-
-    const subtotal = cartItems.reduce((acc, item) => acc + item.quantity * item.price, 0)
 
     return (
         <>
-            <MetaData title={'Your Cart'} />
-            {cartItems.length === 0 ? <h2 className="mt-5">Your Cart is Empty</h2> : (
-                <>
-                    <h2 className="mt-5">Your Cart: <b>{cartItems.length} items</b></h2>
+            <MetaData title="Your Cart" />
+            <main className="cart-page">
+                <header className="cart-heading">
+                    <div>
+                        <span className="cart-eyebrow">A little joy is on its way</span>
+                        <h1>Your cart</h1>
+                        <p>{totalItems} {totalItems === 1 ? 'flower' : 'flowers'} picked just for you</p>
+                    </div>
+                    <Link to="/" className="cart-continue-link">
+                        <i className="fa fa-arrow-left" aria-hidden="true"></i>
+                        Continue shopping
+                    </Link>
+                </header>
 
-                    <div className="row d-flex justify-content-between">
-                        <div className="col-12 col-lg-8">
-                            {cartItems.map(item => (
-                                <div key={`${item.product}-${item.size || ''}`}>
-                                    <hr />
-                                    <div className="cart-item">
-                                        <div className="row">
-                                            <div className="col-4 col-lg-3">
-                                                <img src={item.image} alt={item.name} height="90" width="115" />
-                                            </div>
-
-                                            <div className="col-5 col-lg-3">
-                                                <Link to={`/product/${item.product}`}>{item.name}</Link>
-                                                {item.size && <div><small className="text-muted">Size: {item.size}</small></div>}
-                                            </div>
-
-                                            <div className="col-4 col-lg-2 mt-4 mt-lg-0">
-                                                <p id="card_item_price">{formatPeso(item.price)}</p>
-                                            </div>
-
-                                            <div className="col-4 col-lg-3 mt-4 mt-lg-0">
-                                                <div className="stockCounter d-inline">
-                                                    <span className="btn btn-danger minus" onClick={() => decreaseQty(item)}>-</span>
-                                                    <input type="number" className="form-control count d-inline" value={item.quantity} readOnly />
-                                                    <span className="btn btn-primary plus" onClick={() => increaseQty(item)}>+</span>
+                {cartItems.length === 0 ? (
+                    <section className="cart-empty-state">
+                        <span className="cart-empty-icon"><i className="fa fa-shopping-basket" aria-hidden="true"></i></span>
+                        <h2>Your cart is empty</h2>
+                        <p>Find a bouquet that says it beautifully.</p>
+                        <Link to="/" className="btn btn-primary">Explore the flowers</Link>
+                    </section>
+                ) : (
+                    <div className="cart-layout">
+                        <section className="cart-items-panel" aria-label="Items in your cart">
+                            <div className="cart-list-heading">
+                                <h2>Your flowers <span>{cartItems.length}</span></h2>
+                                <span>Price</span>
+                            </div>
+                            <div className="cart-items-list">
+                                {cartItems.map(item => (
+                                    <article key={`${item.product}-${item.size || ''}`} className="cart-product">
+                                        <Link to={`/product/${item.product}`} className="cart-product-image">
+                                            <img src={item.image} alt={item.name} />
+                                        </Link>
+                                        <div className="cart-product-info">
+                                            <Link to={`/product/${item.product}`} className="cart-product-name">{item.name}</Link>
+                                            {item.size && <span className="cart-product-size">Size: {item.size}</span>}
+                                            <span className="cart-product-unit-price">{formatPeso(item.price)} each</span>
+                                            <div className="cart-product-controls">
+                                                <div className="cart-quantity-control" aria-label={`Quantity: ${item.quantity}`}>
+                                                    <button type="button" aria-label={`Decrease ${item.name} quantity`} disabled={item.quantity <= 1} onClick={() => decreaseQty(item)}>−</button>
+                                                    <span aria-live="polite">{item.quantity}</span>
+                                                    <button type="button" aria-label={`Increase ${item.name} quantity`} disabled={item.quantity >= item.stock} onClick={() => increaseQty(item)}>+</button>
                                                 </div>
-                                                {item.quantity >= item.stock && <small className="d-block text-warning">Max available</small>}
-                                            </div>
-
-                                            <div className="col-4 col-lg-1 mt-4 mt-lg-0">
-                                                <i id="delete_cart_item" className="fa fa-trash btn btn-danger" onClick={() => dispatch(removeItemFromCart(item.product, item.size))}></i>
+                                                {item.quantity >= item.stock && <small className="cart-stock-note">Max available</small>}
                                             </div>
                                         </div>
-                                    </div>
-                                    <hr />
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="col-12 col-lg-3 my-4">
-                            <div id="order_summary">
-                                <h4>Order Summary</h4>
-                                <hr />
-                                <p>Subtotal:  <span className="order-summary-values">{cartItems.reduce((acc, item) => acc + Number(item.quantity), 0)} (Units)</span></p>
-                                <p>Est. total: <span className="order-summary-values">{formatPeso(subtotal, 2)}</span></p>
-                                <hr />
-                                <button id="checkout_btn" className="btn btn-primary btn-block" onClick={() => navigate('/login?redirect=shipping')}>Check out</button>
+                                        <div className="cart-product-trailing">
+                                            <strong className="cart-product-total">{formatPeso(item.quantity * item.price, 2)}</strong>
+                                            <button
+                                                type="button"
+                                                className="cart-remove-button"
+                                                aria-label={`Remove ${item.name} from cart`}
+                                                onClick={() => dispatch(removeItemFromCart(item.product, item.size))}
+                                            >
+                                                <i className="fa fa-trash-o" aria-hidden="true"></i>
+                                                <span>Remove</span>
+                                            </button>
+                                        </div>
+                                    </article>
+                                ))}
                             </div>
-                        </div>
+                        </section>
+
+                        <aside className="cart-summary-panel">
+                            <div className="cart-summary-heading">
+                                <span className="cart-summary-icon"><i className="fa fa-leaf" aria-hidden="true"></i></span>
+                                <div>
+                                    <h2>Order summary</h2>
+                                    <p>Your blooms, wrapped with care</p>
+                                </div>
+                            </div>
+                            <div className="cart-summary-lines">
+                                <div><span>Items ({totalItems})</span><strong>{formatPeso(subtotal, 2)}</strong></div>
+                                <div><span>Delivery</span><span className="cart-summary-muted">Calculated at checkout</span></div>
+                            </div>
+                            <div className="cart-summary-total">
+                                <span>Subtotal</span>
+                                <strong>{formatPeso(subtotal, 2)}</strong>
+                            </div>
+                            <p className="cart-summary-note">Delivery options and final totals are shown at checkout.</p>
+                            <button type="button" id="checkout_btn" className="btn btn-primary btn-block" onClick={() => navigate('/login?redirect=shipping')}>
+                                Continue to checkout
+                                <i className="fa fa-arrow-right" aria-hidden="true"></i>
+                            </button>
+                            <div className="cart-secure-note">
+                                <i className="fa fa-lock" aria-hidden="true"></i>
+                                Secure checkout
+                            </div>
+                        </aside>
                     </div>
-                </>
-            )}
+                )}
+            </main>
         </>
     )
 }

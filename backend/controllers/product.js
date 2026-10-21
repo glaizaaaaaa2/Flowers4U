@@ -77,7 +77,7 @@ exports.getSingleProduct = async (req, res) => {
     return res.status(200).json({ success: true, product })
 }
 
-// GET /products?keyword=&category=&price[gte]=&price[lte]=&ratings[gte]=&page=
+// GET /products?keyword=&category=&price[gte]=&price[lte]=&ratings[gte]=&numOfReviews[gte]=&page=
 exports.getProducts = async (req, res) => {
     const productsCount = await Product.countDocuments({ shop: SHOP_NAME });
     const apiFeatures = new APIFeatures(Product.find({ shop: SHOP_NAME }).sort({ createdAt: -1 }), req.query).search().filter()

@@ -10,7 +10,7 @@ import {
     CLEAR_ERRORS
 } from '../constants/productConstants';
 
-export const getProducts = (currentPage = 1, keyword = '', price = ['', ''], category = '', rating = 0, append = false) => async (dispatch) => {
+export const getProducts = (currentPage = 1, keyword = '', price = ['', ''], category = '', rating = 0, append = false, minReviews = 0) => async (dispatch) => {
     try {
         dispatch({
             type: ALL_PRODUCTS_REQUEST,
@@ -27,6 +27,7 @@ export const getProducts = (currentPage = 1, keyword = '', price = ['', ''], cat
         if (maxPrice !== '' && maxPrice != null) params['price[lte]'] = maxPrice
         if (category) params.category = category
         if (rating) params['ratings[gte]'] = rating
+        if (minReviews) params['numOfReviews[gte]'] = minReviews
 
         const { data } = await axios.get(`${import.meta.env.VITE_API}/products`, { params })
         dispatch({

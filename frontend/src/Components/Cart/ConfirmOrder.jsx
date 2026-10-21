@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import CheckoutSteps from './CheckoutSteps'
@@ -18,10 +17,17 @@ const ConfirmOrder = () => {
 
     if (cartItems.length === 0 || !shippingInfo.address || !shippingInfo.deliveryDate) {
         return (
-            <div className="mt-5">
-                <h2>Nothing to confirm yet</h2>
-                <Link to="/cart">Back to cart</Link>
-            </div>
+            <>
+                <MetaData title="Confirm Order" />
+                <main className="confirm-page">
+                    <section className="confirm-empty-state">
+                        <span className="confirm-empty-icon"><i className="fa fa-clipboard" aria-hidden="true"></i></span>
+                        <h1>Nothing to confirm yet</h1>
+                        <p>Add flowers to your cart and enter delivery details to review your order here.</p>
+                        <Link to="/cart" className="btn btn-primary">Back to cart</Link>
+                    </section>
+                </main>
+            </>
         )
     }
 
@@ -37,55 +43,99 @@ const ConfirmOrder = () => {
 
     return (
         <>
-            <MetaData title={'Confirm Order'} />
+            <MetaData title="Confirm Order" />
             <CheckoutSteps shipping confirmOrder />
-            <div className="row d-flex justify-content-between">
-                <div className="col-12 col-lg-8 mt-5 order-confirm">
-                    <h4 className="mb-3">Delivery Info</h4>
-                    {user && <p><b>Ordered by:</b> {user.name}</p>}
-                    <p><b>Delivery date:</b> {formatDate(shippingInfo.deliveryDate)}</p>
-                    <p><b>Recipient:</b> {shippingInfo.recipientName} ({shippingInfo.recipientPhone})</p>
-                    <p><b>Your contact:</b> {shippingInfo.phoneNo}</p>
-                    <p className="mb-2"><b>Address:</b> {`${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.postalCode}, ${shippingInfo.country}`}</p>
-                    {shippingInfo.giftMessage && <p className="mb-4"><b>Card message:</b> {shippingInfo.giftMessage}</p>}
+            <main className="confirm-page">
+                <header className="confirm-heading">
+                    <div>
+                        <span className="confirm-eyebrow">One last look</span>
+                        <h1>Review your order</h1>
+                        <p>Make sure everything is just right before payment.</p>
+                    </div>
+                    <span className="confirm-item-count">{cartItems.length} {cartItems.length === 1 ? 'product' : 'products'}</span>
+                </header>
 
-                    <hr />
-                    <h4 className="mt-4">Your Cart Items:</h4>
-
-                    {cartItems.map(item => (
-                        <div className="cart-item my-1" key={`${item.product}-${item.size || ''}`}>
-                            <hr />
-                            <div className="row">
-                                <div className="col-4 col-lg-2">
-                                    <img src={item.image} alt={item.name} height="45" width="65" />
+                <div className="confirm-layout">
+                    <div className="confirm-main">
+                        <section className="confirm-card">
+                            <div className="confirm-card-heading">
+                                <span className="confirm-card-icon"><i className="fa fa-gift" aria-hidden="true"></i></span>
+                                <div>
+                                    <h2>Delivery details</h2>
+                                    <p>Your flowers are headed somewhere special.</p>
                                 </div>
-                                <div className="col-5 col-lg-6">
-                                    <Link to={`/product/${item.product}`}>{item.name}</Link>
-                                    {item.size && <small className="text-muted"> ({item.size})</small>}
-                                </div>
-                                <div className="col-4 col-lg-4 mt-4 mt-lg-0">
-                                    <p>{item.quantity} x {formatPeso(item.price)} = <b>{formatPeso(item.quantity * item.price, 2)}</b></p>
+                                <Link to="/shipping" className="confirm-edit-link">Edit</Link>
+                            </div>
+                            <div className="confirm-delivery-grid">
+                                {user && <div><span>Ordered by</span><strong>{user.name}</strong></div>}
+                                <div><span>Delivery date</span><strong>{formatDate(shippingInfo.deliveryDate)}</strong></div>
+                                <div><span>Recipient</span><strong>{shippingInfo.recipientName || '—'}</strong></div>
+                                {shippingInfo.recipientPhone && <div><span>Recipient phone</span><strong>{shippingInfo.recipientPhone}</strong></div>}
+                                <div><span>Your contact</span><strong>{shippingInfo.phoneNo}</strong></div>
+                                <div className="confirm-delivery-address">
+                                    <span>Delivery address</span>
+                                    <strong>{[shippingInfo.address, shippingInfo.city, shippingInfo.postalCode, shippingInfo.country].filter(Boolean).join(', ')}</strong>
                                 </div>
                             </div>
-                            <hr />
-                        </div>
-                    ))}
-                </div>
+                            {shippingInfo.giftMessage && (
+                                <blockquote className="confirm-gift-message">
+                                    <span>Gift message</span>
+                                    <p>“{shippingInfo.giftMessage}”</p>
+                                </blockquote>
+                            )}
+                        </section>
 
-                <div className="col-12 col-lg-3 my-4">
-                    <div id="order_summary">
-                        <h4>Order Summary</h4>
-                        <hr />
-                        <p>Subtotal:  <span className="order-summary-values">{formatPeso(itemsPrice, 2)}</span></p>
-                        <p>Shipping: <span className="order-summary-values">{formatPeso(shippingPrice, 2)}</span></p>
-                        <p>Tax:  <span className="order-summary-values">{formatPeso(taxPrice, 2)}</span></p>
-                        <hr />
-                        <p>Total: <span className="order-summary-values">{formatPeso(totalPrice, 2)}</span></p>
-                        <hr />
-                        <button id="checkout_btn" className="btn btn-primary btn-block" onClick={processToPayment}>Proceed to Payment</button>
+                        <section className="confirm-card">
+                            <div className="confirm-card-heading">
+                                <span className="confirm-card-icon is-green"><i className="fa fa-leaf" aria-hidden="true"></i></span>
+                                <div>
+                                    <h2>Your flowers</h2>
+                                    <p>{cartItems.reduce((total, item) => total + Number(item.quantity), 0)} items, carefully chosen</p>
+                                </div>
+                                <Link to="/cart" className="confirm-edit-link">Edit cart</Link>
+                            </div>
+                            <div className="confirm-items-list">
+                                {cartItems.map(item => (
+                                    <article className="confirm-item" key={`${item.product}-${item.size || ''}`}>
+                                        <Link to={`/product/${item.product}`} className="confirm-item-image">
+                                            <img src={item.image} alt={item.name} />
+                                        </Link>
+                                        <div className="confirm-item-info">
+                                            <Link to={`/product/${item.product}`} className="confirm-item-name">{item.name}</Link>
+                                            {item.size && <span className="confirm-item-size">Size: {item.size}</span>}
+                                            <span className="confirm-item-quantity">Qty {item.quantity} × {formatPeso(item.price)}</span>
+                                        </div>
+                                        <strong className="confirm-item-total">{formatPeso(item.quantity * item.price, 2)}</strong>
+                                    </article>
+                                ))}
+                            </div>
+                        </section>
                     </div>
+
+                    <aside className="confirm-summary">
+                        <div className="confirm-summary-heading">
+                            <span className="confirm-card-icon is-green"><i className="fa fa-credit-card" aria-hidden="true"></i></span>
+                            <div>
+                                <h2>Order summary</h2>
+                                <p>All the details, at a glance.</p>
+                            </div>
+                        </div>
+                        <dl className="confirm-price-lines">
+                            <div><dt>Subtotal</dt><dd>{formatPeso(itemsPrice, 2)}</dd></div>
+                            <div><dt>Shipping</dt><dd>{shippingPrice === 0 ? 'Free' : formatPeso(shippingPrice, 2)}</dd></div>
+                            <div><dt>Tax</dt><dd>{formatPeso(taxPrice, 2)}</dd></div>
+                            <div className="confirm-total"><dt>Total</dt><dd>{formatPeso(totalPrice, 2)}</dd></div>
+                        </dl>
+                        <p className="confirm-summary-note">Shipping is free on orders over ₱200.</p>
+                        <button type="button" id="checkout_btn" className="btn btn-primary btn-block" onClick={processToPayment}>
+                            Proceed to payment
+                            <i className="fa fa-arrow-right" aria-hidden="true"></i>
+                        </button>
+                        <div className="confirm-secure-note"><i className="fa fa-lock" aria-hidden="true"></i> Secure checkout</div>
+                        <Link to="/cart" className="confirm-back-link">Back to cart</Link>
+                    </aside>
                 </div>
-            </div>
+            </main>
         </>
     )
 }

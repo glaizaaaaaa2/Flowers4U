@@ -1,149 +1,125 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
-import axios from 'axios'
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-// import { getToken } from '../Utils/helpers'
+import { toast } from 'react-toastify'
 import { useDispatch, useSelector } from 'react-redux'
 import { myOrders, clearErrors } from '../../actions/orderActions'
-import { formatDate, statusColor, formatPeso } from '../Utils/helpers'
+import { formatDate, formatPeso } from '../Utils/helpers'
 
-import {
-
-    Button
-} from '@mui/material'
-
-
-import { DataGrid, } from '@mui/x-data-grid'
+const orderStatusClass = (status) => {
+    if (status === 'Delivered') return 'order-status is-delivered'
+    if (status === 'Cancelled') return 'order-status is-cancelled'
+    return 'order-status is-pending'
+}
 
 const ListOrders = () => {
-    const dispatch = useDispatch();
-    const { loading, error, orders } = useSelector(state => state.myOrders);
-    // const [loading, setLoading] = useState(true)
-    // const [error, setError] = useState('')
-    // const [myOrdersList, setMyOrdersList] = useState([])
+    const dispatch = useDispatch()
+    const { loading, error, orders = [] } = useSelector(state => state.myOrders)
 
-    // const myOrders = async () => {
-    //     try {
-    //         const config = {
-    //             headers: {
-    //                 'Authorization': `Bearer ${getToken()}`
-    //             }
-    //         }
-    //         const { data } = await axios.get(`${import.meta.env.VITE_API}/orders/me`, config)
-    //         console.log(data)
-    //         setMyOrdersList(data.orders)
-    //         setLoading(false)
-
-    //     } catch (error) {
-    //         setError((error.response?.data?.message || error.message))
-    //     }
-    // }
-    // useEffect(() => {
-    //     myOrders();
-    //     if (error) {
-    //         toast.error(error, {
-    //             position: toast.POSITION.BOTTOM_RIGHT
-    //         });
-    //     }
-    // }, [error])
-
-    const columns = [
-        {
-            field: 'id',
-            headerName: 'Order ID',
-            flex: 1,
-            renderCell: (params) => <span style={{ wordBreak: 'break-all' }}>{params.value}</span>
-        },
-        {
-            field: 'numOfItems',
-            headerName: 'Num of Items',
-            type: 'number',
-            width: 130,
-            align: 'right',
-            headerAlign: 'right'
-        },
-        {
-            field: 'amount',
-            headerName: 'Amount',
-            width: 120,
-            align: 'right',
-            headerAlign: 'right'
-        },
-        {
-            field: 'deliveryDate',
-            headerName: 'Delivery Date',
-            width: 160
-        },
-        {
-            field: 'status',
-            headerName: 'Status',
-            width: 170,
-            renderCell: (params) => <span className={statusColor(params.value)}><b>{params.value}</b></span>
-        },
-        {
-            field: 'actions',
-            headerName: 'Actions',
-            width: 180,
-            sortable: false,
-            filterable: false,
-            renderCell: (params) => (
-                <>
-                    <Button component={Link} to={`/order/${params.id}`} variant="contained" size="small">
-                        <i className="fa fa-eye" />
-                    </Button>
-                    {params.row.status === 'Delivered' && (
-                        <Button component={Link} to={`/receipt/${params.id}`} variant="outlined" size="small" sx={{ ml: 1 }}>
-                            Receipt
-                        </Button>
-                    )}
-                </>
-            )
-        }
-    ];
-
-    const rows = orders.map(order => ({
-        id: order._id,
-        numOfItems: order.orderItems.length,
-        amount: formatPeso(order.totalPrice, 2),
-        deliveryDate: formatDate(order.deliveryDate),
-        status: order.orderStatus || ''
-    }));
     useEffect(() => {
-        dispatch(myOrders());
+        dispatch(myOrders())
+    }, [dispatch])
+
+    useEffect(() => {
         if (error) {
-            toast.error(error, {
-                position: 'bottom-right'
-            });
+            toast.error(error, { position: 'bottom-right' })
+            dispatch(clearErrors())
         }
     }, [error, dispatch])
 
-
+    const deliveredCount = orders.filter(order => order.orderStatus === 'Delivered').length
 
     return (
         <>
-            <MetaData title={'My Orders'} />
-            <h1 className="my-5">My Orders</h1>
+            <MetaData title="My Orders" />
+            <main className="orders-page">
+                <header className="orders-heading">
+                    <div>
+                        <span className="orders-eyebrow">Your Flowers 4U account</span>
+                        <h1>My Orders</h1>
+                        <p>Every thoughtful delivery, all in one place.</p>
+                    </div>
+                    <Link to="/" className="orders-shop-link">
+                        <i className="fa fa-leaf" aria-hidden="true"></i>
+                        Browse flowers
+                    </Link>
+                </header>
 
+                {!loading && orders.length > 0 && (
+                    <div className="orders-overview" aria-label="Order summary">
+                        <div className="orders-stat">
+                            <span className="orders-stat-icon"><i className="fa fa-gift" aria-hidden="true"></i></span>
+                            <span><strong>{orders.length}</strong><small>{orders.length === 1 ? 'Total order' : 'Total orders'}</small></span>
+                        </div>
+                        <div className="orders-stat">
+                            <span className="orders-stat-icon is-green"><i className="fa fa-check" aria-hidden="true"></i></span>
+                            <span><strong>{deliveredCount}</strong><small>{deliveredCount === 1 ? 'Delivered order' : 'Delivered orders'}</small></span>
+                        </div>
+                    </div>
+                )}
 
+                {loading ? <Loader /> : orders.length === 0 ? (
+                    <section className="orders-empty">
+                        <span className="orders-empty-icon"><i className="fa fa-leaf" aria-hidden="true"></i></span>
+                        <h2>Your order history is waiting to bloom</h2>
+                        <p>Once you place an order, you’ll find its delivery details and status here.</p>
+                        <Link to="/" className="btn btn-primary">Explore the flowers</Link>
+                    </section>
+                ) : (
+                    <section className="orders-list" aria-label="Your orders">
+                        {orders.map(order => {
+                            const itemCount = order.orderItems.reduce((total, item) => total + item.quantity, 0)
+                            const firstItem = order.orderItems[0]
 
-
-            {loading ? <Loader /> : (
-                <div style={{ width: '100%' }}>
-                    <DataGrid
-                        rows={rows}
-                        columns={columns}
-
-                        pageSize={5}
-                        rowsPerPageOptions={[5, 10, 25]}
-                        disableSelectionOnClick
-                        getRowId={(row) => row.id}
-                        showToolbar
-                    />
-                </div>
-            )}
+                            return (
+                                <article className="order-history-card" key={order._id}>
+                                    <div className="order-history-main">
+                                        <div className="order-history-identity">
+                                            {firstItem?.image ? (
+                                                <img className="order-history-image" src={firstItem.image} alt="" />
+                                            ) : (
+                                                <span className="order-history-image order-history-image-empty">
+                                                    <i className="fa fa-leaf" aria-hidden="true"></i>
+                                                </span>
+                                            )}
+                                            <div>
+                                                <span className="order-number">Order <span title={order._id}>#{order._id.slice(-8).toUpperCase()}</span></span>
+                                                <span className="order-date">Placed for {formatDate(order.deliveryDate)}</span>
+                                            </div>
+                                        </div>
+                                        <div className="order-history-facts">
+                                            <div><span>Items</span><strong>{itemCount} {itemCount === 1 ? 'item' : 'items'}</strong></div>
+                                            <div><span>Total</span><strong>{formatPeso(order.totalPrice, 2)}</strong></div>
+                                            <div>
+                                                <span>Status</span>
+                                                <strong className={orderStatusClass(order.orderStatus)}>{order.orderStatus || 'Processing'}</strong>
+                                            </div>
+                                        </div>
+                                        <div className="order-history-actions">
+                                            <Link to={`/order/${order._id}`} className="order-action-primary">
+                                                View order <i className="fa fa-arrow-right" aria-hidden="true"></i>
+                                            </Link>
+                                            {order.orderStatus === 'Delivered' && (
+                                                <Link to={`/receipt/${order._id}`} className="order-action-secondary">
+                                                    Receipt
+                                                </Link>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="order-history-items">
+                                        <span className="order-items-label">In this order</span>
+                                        <span className="order-items-preview">
+                                            {order.orderItems.slice(0, 3).map(item => item.name).join(' · ')}
+                                            {order.orderItems.length > 3 && ` +${order.orderItems.length - 3} more`}
+                                        </span>
+                                    </div>
+                                </article>
+                            )
+                        })}
+                    </section>
+                )}
+            </main>
         </>
     )
 }
