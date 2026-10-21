@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import axios from 'axios'
 import MetaData from '../Layout/MetaData'
 import Loader from '../Layout/Loader'
-import { formatDate, formatDateTime, formatPeso } from '../Utils/helpers'
+import { formatDate, formatDateTime, formatPeso, getToken } from '../Utils/helpers'
 
 // Digital receipt for completed (Delivered) orders. "Print / Save as PDF" uses the browser.
 const Receipt = () => {
@@ -12,7 +12,10 @@ const Receipt = () => {
     const [error, setError] = useState('')
 
     useEffect(() => {
-        axios.get(`${import.meta.env.VITE_API}/order/${id}`)
+        axios.get(`${import.meta.env.VITE_API}/order/${id}`, {
+            headers: { Authorization: `Bearer ${getToken()}` },
+            withCredentials: true
+        })
             .then(({ data }) => setOrder(data.order))
             .catch(e => setError(e.response?.data?.message || e.message))
     }, [id])
