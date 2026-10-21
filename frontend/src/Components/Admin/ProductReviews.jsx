@@ -164,6 +164,7 @@ const ProductReviews = () => {
                                                 <div className="admin-review-author">
                                                     <strong>{review.name || 'Customer'}</strong>
                                                     <span>Reviewed <Link to={`/product/${review.productId}`}>{review.productName || 'Product'}</Link></span>
+                                                    <span>{review.createdAt ? `Submitted ${new Date(review.createdAt).toLocaleString('en-PH')}` : 'Submission date unavailable'}</span>
                                                 </div>
                                                 <span className="admin-review-rating" aria-label={`${review.rating} out of 5 stars`}>
                                                     <span aria-hidden="true">{'★'.repeat(Number(review.rating) || 0)}{'☆'.repeat(Math.max(0, 5 - (Number(review.rating) || 0)))}</span>

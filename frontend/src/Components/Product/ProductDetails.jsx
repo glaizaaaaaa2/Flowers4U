@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { Carousel } from 'react-bootstrap'
 import axios from 'axios'
@@ -16,6 +16,7 @@ const ProductDetails = () => {
     const { id } = useParams()
     const [searchParams] = useSearchParams()
     const reviewRequested = searchParams.get('review') === 'write'
+    const requestedOrderId = searchParams.get('orderId')
     const dispatch = useDispatch()
     const { loading, product } = useSelector(state => state.productDetails)
     const { user } = useSelector(state => state.auth)
@@ -25,6 +26,7 @@ const ProductDetails = () => {
 
     // review state
     const [canReview, setCanReview] = useState(false)
+    const [reviewOrderId, setReviewOrderId] = useState('')
     const [showForm, setShowForm] = useState(false)
     const [rating, setRating] = useState(0)
     const [hover, setHover] = useState(0)
@@ -43,19 +45,23 @@ const ProductDetails = () => {
     }, [id, dispatch])
 
     // only customers who received this product can review it
-    const loadReviewAccess = async () => {
-        if (!user) { setCanReview(false); return }
+    const loadReviewAccess = useCallback(async () => {
+        if (!user) return
         try {
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/product/${id}/can-review`)
+            const query = requestedOrderId ? `?orderId=${encodeURIComponent(requestedOrderId)}` : ''
+            const { data } = await axios.get(`${import.meta.env.VITE_API}/product/${id}/can-review${query}`)
             setCanReview(data.canReview)
+            setReviewOrderId(data.orderId || '')
             setShowForm(data.canReview && reviewRequested)
             if (data.review) { setRating(data.review.rating); setComment(data.review.comment) }
-        } catch (e) {
+            else { setRating(0); setComment('') }
+        } catch {
             setCanReview(false)
+            setReviewOrderId('')
             setShowForm(false)
         }
-    }
-    useEffect(() => { loadReviewAccess() }, [id, user, reviewRequested])
+    }, [id, requestedOrderId, reviewRequested, user])
+    useEffect(() => { loadReviewAccess() }, [loadReviewAccess])
 
     const addToCart = async () => {
         if (hasSizes && !size) {
@@ -71,12 +77,16 @@ const ProductDetails = () => {
         if (!comment.trim()) { toast.error('Please write a comment', { position: 'bottom-right' }); return }
         setSending(true)
         try {
-            const { data } = await axios.put(`${import.meta.env.VITE_API}/review`, { rating, comment, productId: id })
+            const { data } = await axios.put(`${import.meta.env.VITE_API}/review`, {
+                rating,
+                comment,
+                productId: id,
+                orderId: reviewOrderId
+            })
             toast.success('Thanks for your review!', { position: 'bottom-right' })
             if (data.filtered) toast.info('Some words in your review were hidden by our language filter', { position: 'bottom-right' })
             setShowForm(false)
             dispatch(getProductDetails(id))
-            loadReviewAccess()
         } catch (error) {
             toast.error(error.response?.data?.message || error.message, { position: 'bottom-right' })
         } finally {
@@ -223,7 +233,7 @@ const ProductDetails = () => {
                                 </div>
                                 <textarea className="form-control" rows="4" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="How were the flowers?" />
                                 <div className="review-form-actions">
-                                    <button className="btn btn-primary" disabled={sending} onClick={submitReview}>Submit review</button>
+                                                            <button className="btn btn-primary" disabled={sending} onClick={submitReview}>{comment ? 'Update review' : 'Submit review'}</button>
                                     <button className="btn btn-outline-secondary" onClick={() => setShowForm(false)}>Cancel</button>
                                 </div>
                             </div>
@@ -231,7 +241,7 @@ const ProductDetails = () => {
 
                         {user && canReview && !showForm && (
                             <button id="review_btn" type="button" className="btn btn-primary product-write-review" onClick={() => setShowForm(true)}>
-                                {comment ? 'Edit your review' : 'Write a review'}
+                                {comment ? 'Edit this order’s review' : 'Write a review for this order'}
                             </button>
                         )}
 

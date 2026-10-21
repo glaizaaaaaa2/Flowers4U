@@ -173,33 +173,53 @@ exports.getAdminProducts = async (req, res) => {
 
 // ---------------- Reviews ----------------
 
-// A "verified customer" has a Delivered order containing the product
-const hasPurchased = (userId, productId) => Order.exists({
-    shop: SHOP_NAME,
-    user: userId,
-    orderStatus: 'Delivered',
-    'orderItems.product': productId
-})
-
 // GET /product/:id/can-review
 exports.canReview = async (req, res) => {
-    const purchased = !!(await hasPurchased(req.user._id, req.params.id))
     const product = await Product.findOne({ _id: req.params.id, shop: SHOP_NAME })
-    const existing = product && product.reviews.find(r => r.user.toString() === req.user._id.toString())
+    if (!product) return res.status(404).json({ message: 'Product not found' })
+
+    const deliveredOrders = await Order.find({
+        shop: SHOP_NAME,
+        user: req.user._id,
+        orderStatus: 'Delivered',
+        'orderItems.product': req.params.id
+    }).select('_id').sort({ deliveredAt: -1, createdAt: -1 })
+    const targetOrderId = req.query.orderId
+        ? String(req.query.orderId)
+        : deliveredOrders.find(order => !product.reviews.some(review =>
+            review.order && review.order.toString() === order._id.toString()
+        ))?._id.toString() || deliveredOrders[0]?._id.toString()
+    const isEligibleOrder = deliveredOrders.some(order => order._id.toString() === targetOrderId)
+    const existing = isEligibleOrder && product.reviews.find(review =>
+        review.order && review.order.toString() === targetOrderId &&
+        review.user.toString() === req.user._id.toString()
+    )
+
     res.status(200).json({
         success: true,
-        canReview: purchased,
+        canReview: isEligibleOrder,
+        orderId: isEligibleOrder ? targetOrderId : null,
         review: existing ? { rating: existing.rating, comment: existing.comment } : null
     })
 }
 
 // PUT /review   (create or update the logged-in customer's review)
 exports.createProductReview = async (req, res) => {
-    const { rating, comment, productId } = req.body;
+    const { rating, comment, productId, orderId } = req.body;
     const product = await Product.findOne({ _id: productId, shop: SHOP_NAME });
     if (!product) return res.status(404).json({ message: 'Product not found' })
 
-    if (!(await hasPurchased(req.user._id, productId))) {
+    if (!orderId) {
+        return res.status(400).json({ message: 'Please select a delivered order for this review' })
+    }
+    const order = await Order.findOne({
+        _id: orderId,
+        shop: SHOP_NAME,
+        user: req.user._id,
+        orderStatus: 'Delivered',
+        'orderItems.product': productId
+    }).select('_id')
+    if (!order) {
         return res.status(403).json({ message: 'Only customers who received this product can review it' })
     }
     const numRating = Number(rating)
@@ -213,12 +233,22 @@ exports.createProductReview = async (req, res) => {
     // inappropriate words are masked with asterisks
     const cleanComment = cleanText(String(comment).trim())
 
-    const existing = product.reviews.find(r => r.user.toString() === req.user._id.toString())
+    const existing = product.reviews.find(review =>
+        review.order && review.order.toString() === order._id.toString() &&
+        review.user.toString() === req.user._id.toString()
+    )
     if (existing) {
         existing.comment = cleanComment;
         existing.rating = numRating;
     } else {
-        product.reviews.push({ user: req.user._id, name: req.user.name, rating: numRating, comment: cleanComment });
+        product.reviews.push({
+            user: req.user._id,
+            order: order._id,
+            name: req.user.name,
+            rating: numRating,
+            comment: cleanComment,
+            createdAt: new Date()
+        });
     }
     product.numOfReviews = product.reviews.length
     product.ratings = product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length

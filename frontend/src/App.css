@@ -1095,6 +1095,13 @@ footer p {
   font-size: 0.85rem;
 }
 
+.review-submitted-date {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
 .review_comment {
   margin: 0.75rem 0 0;
   color: var(--ink-soft);

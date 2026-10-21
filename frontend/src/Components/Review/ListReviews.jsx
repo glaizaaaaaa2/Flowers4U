@@ -1,3 +1,5 @@
+import { formatDateTime } from '../Utils/helpers'
+
 const ListReviews = ({ reviews }) => {
     return (
         <div className="reviews-list">
@@ -10,6 +12,9 @@ const ListReviews = ({ reviews }) => {
                             <div className="rating-outer" aria-label={`${review.rating} out of 5 stars`}>
                                 <div className="rating-inner" style={{ width: `${(review.rating / 5) * 100}%` }}></div>
                             </div>
+                            <time className="review-submitted-date" dateTime={review.createdAt || undefined}>
+                                {review.createdAt ? `Submitted ${formatDateTime(review.createdAt)}` : 'Submission date unavailable'}
+                            </time>
                         </div>
                     </div>
                     <p className="review_comment">{review.comment}</p>

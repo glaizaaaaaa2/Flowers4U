@@ -73,6 +73,10 @@ const productSchema = new mongoose.Schema({
                 ref: 'User',
                 required: true
             },
+            order: {
+                type: mongoose.Schema.ObjectId,
+                ref: 'Order'
+            },
             name: {
                 type: String,
                 required: true
@@ -84,6 +88,9 @@ const productSchema = new mongoose.Schema({
             comment: {
                 type: String,
                 required: true
+            },
+            createdAt: {
+                type: Date
             }
         }
     ],

@@ -117,7 +117,7 @@ const OrderDetails = () => {
                                             {item.size && <span className="order-detail-item-size">Size: {item.size}</span>}
                                             <span className="order-detail-item-quantity">Qty {item.quantity}</span>
                                             {orderStatus === 'Delivered' && (
-                                                <Link to={`/product/${item.product}?review=write`} className="order-item-review-link">
+                                                <Link to={`/product/${item.product}?review=write&orderId=${order._id}`} className="order-item-review-link">
                                                     <i className="fa fa-star" aria-hidden="true"></i>
                                                     Submit a review
                                                 </Link>
