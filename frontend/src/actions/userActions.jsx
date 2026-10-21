@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { saveSession, clearSession } from '../Components/Utils/helpers'
+import { saveSession, clearSession, getToken } from '../Components/Utils/helpers'
 import { signInWithGoogle } from '../firebase'
 import {
     LOGIN_REQUEST,
@@ -149,10 +149,12 @@ export const forgotPassword = (email) => async (dispatch) => {
 
 export const updatePassword = (passwords) => async (dispatch) => {
     try {
+        const token = getToken()
         dispatch({ type: UPDATE_PASSWORD_REQUEST })
         const config = {
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
             },
             withCredentials: true,
         }
@@ -171,9 +173,11 @@ export const updatePassword = (passwords) => async (dispatch) => {
 
 export const loadUser = () => async (dispatch) => {
     try {
+        const token = getToken()
         const config = {
             headers: {
                 'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
             },
             withCredentials: true,
         }
@@ -194,11 +198,12 @@ export const loadUser = () => async (dispatch) => {
 
 export const updateProfile = (userData) => async (dispatch) => {
     try {
-
+        const token = getToken()
         dispatch({ type: UPDATE_PROFILE_REQUEST })
         const config = {
             headers: {
-                'Content-Type': 'multipart/form-data'
+                'Content-Type': 'multipart/form-data',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
             },
             withCredentials: true,
         }
@@ -208,7 +213,6 @@ export const updateProfile = (userData) => async (dispatch) => {
             payload: data.success
         })
     } catch (error) {
-        console.log(error)
         dispatch({
             type: UPDATE_PROFILE_FAIL,
             payload: (error.response?.data?.message || error.message)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import MetaData from '../Layout/MetaData'
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify'
 import { updateProfile, loadUser, clearErrors } from '../../actions/userActions'
 import { useForm } from 'react-hook-form'
 
@@ -86,8 +87,7 @@ const UpdateProfile = () => {
             reset({ name: user.name || '', email: user.email || '' })
         }
         if (error) {
-            // alert.error(error);
-            console.log(error)
+            toast.error(error, { position: 'bottom-right' })
             dispatch(clearErrors());
         }
         if (isUpdated) {
