@@ -68,15 +68,21 @@ const ProductReviews = () => {
 
     const filteredReviews = useMemo(() => {
         const query = search.trim().toLowerCase()
-        return reviews.filter(review => {
-            const matchesRating = ratingFilter === 'All ratings' || review.rating === Number(ratingFilter)
-            const matchesSearch = !query || [
-                review.productName,
-                review.name,
-                review.comment
-            ].some(value => String(value || '').toLowerCase().includes(query))
-            return matchesRating && matchesSearch
-        })
+        return reviews
+            .filter(review => {
+                const matchesRating = ratingFilter === 'All ratings' || review.rating === Number(ratingFilter)
+                const matchesSearch = !query || [
+                    review.productName,
+                    review.name,
+                    review.comment
+                ].some(value => String(value || '').toLowerCase().includes(query))
+                return matchesRating && matchesSearch
+            })
+            .sort((first, second) => {
+                const firstDate = Date.parse(first.createdAt || '')
+                const secondDate = Date.parse(second.createdAt || '')
+                return (Number.isFinite(secondDate) ? secondDate : 0) - (Number.isFinite(firstDate) ? firstDate : 0)
+            })
     }, [ratingFilter, reviews, search])
 
     const averageRating = reviews.length
