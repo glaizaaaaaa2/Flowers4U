@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getToken } from '../Components/Utils/helpers'
 import {
     CREATE_ORDER_REQUEST,
     CREATE_ORDER_SUCCESS,
@@ -33,7 +34,8 @@ export const createOrder = (order) => async (dispatch) => {
         dispatch({ type: CREATE_ORDER_REQUEST })
         const config = {
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getToken()}`
             },
             withCredentials: true
         }
