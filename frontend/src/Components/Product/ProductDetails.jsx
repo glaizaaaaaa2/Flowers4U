@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Carousel } from 'react-bootstrap'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -14,12 +14,14 @@ import { addItemToCart } from '../../actions/cartActions'
 
 const ProductDetails = () => {
     const { id } = useParams()
+    const location = useLocation()
+    const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const reviewRequested = searchParams.get('review') === 'write'
     const requestedOrderId = searchParams.get('orderId')
     const dispatch = useDispatch()
     const { loading, product } = useSelector(state => state.productDetails)
-    const { user } = useSelector(state => state.auth)
+    const { user, isAuthenticated, loading: authLoading } = useSelector(state => state.auth)
 
     const [quantity, setQuantity] = useState(1)
     const [size, setSize] = useState('')
@@ -64,6 +66,12 @@ const ProductDetails = () => {
     useEffect(() => { loadReviewAccess() }, [loadReviewAccess])
 
     const addToCart = async () => {
+        if (authLoading) return
+        if (!isAuthenticated || !user) {
+            const returnTo = `${location.pathname}${location.search}`
+            navigate(`/login?redirect=${encodeURIComponent(returnTo)}`)
+            return
+        }
         if (hasSizes && !size) {
             toast.error('Please choose a size first', { position: 'bottom-right' })
             return
@@ -170,7 +178,7 @@ const ProductDetails = () => {
                                 type="button"
                                 id="cart_btn"
                                 className="btn btn-primary"
-                                disabled={!info.available}
+                                disabled={!info.available || authLoading}
                                 onClick={addToCart}
                             >
                                 <i className="fa fa-shopping-bag" aria-hidden="true"></i>

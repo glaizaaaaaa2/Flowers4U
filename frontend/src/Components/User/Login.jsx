@@ -42,7 +42,11 @@ const Login = () => {
     // }
 
     const redirect = location.search ? new URLSearchParams(location.search).get('redirect') : ''
-    console.log(redirect)
+    const redirectTo = redirect === 'shipping'
+        ? '/shipping'
+        : redirect?.startsWith('/') && !redirect.startsWith('//')
+            ? redirect
+            : '/'
     // useEffect(() => {
     //     if (getUser()) {
     //         navigate('/')
@@ -56,16 +60,12 @@ const Login = () => {
     // }, [])
 
     useEffect(() => {
-        if (isAuthenticated && redirect === 'shipping') {
-            navigate(`/${redirect}`)
-        }
-        else if (isAuthenticated)
-            navigate('/')
+        if (isAuthenticated) navigate(redirectTo, { replace: true })
         if (error) {
             toast.error(error, { position: 'bottom-right' });
             dispatch(clearErrors());
         }
-    }, [error, isAuthenticated, dispatch, navigate, redirect])
+    }, [error, isAuthenticated, dispatch, navigate, redirectTo])
 
     return (
         <>
